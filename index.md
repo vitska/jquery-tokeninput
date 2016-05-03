@@ -34,6 +34,8 @@ from a predefined list, using autocompletion as they type to find each item.
 You may have seen a similar type of text entry when filling in the recipients
 field sending messages on facebook.
 
+*If you are also looking for a great [JavaScript error monitoring](https://bugsnag.com/platforms/javascript) solution, I'd also recommend checking out my company, [Bugsnag](https://bugsnag.com).*
+
 
 Features
 --------
