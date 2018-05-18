@@ -17,7 +17,7 @@
     propertyToSearch: "name",
     jsonContainer: null,
     contentType: "json",
-    excludeCurrent: false,
+    excludeCurrent: false, // Might be a funcion (currentTokens, results): filteredresults
     excludeCurrentParameter: "x",
 
     // Prepopulation settings
@@ -846,29 +846,38 @@
 
       // exclude existing tokens from dropdown, so the list is clearer
       function excludeCurrent(results) {
-          if ($(input).data("settings").excludeCurrent) {
-              var currentTokens = $(input).data("tokenInputObject").getTokens(),
-                  trimmedList = [];
-              if (currentTokens.length) {
-                  $.each(results, function(index, value) {
-                      var notFound = true;
-                      $.each(currentTokens, function(cIndex, cValue) {
-                          if (value[$(input).data("settings").propertyToSearch] == cValue[$(input).data("settings").propertyToSearch]) {
-                              notFound = false;
-                              return false;
-                          }
-                      });
+        // VGO: 2018-05-17 added ability to apply custom logic in filtering current results
+        var setting = $(input).data("settings").excludeCurrent,
+            currentTokens = $(input).data("tokenInputObject").getTokens(),
+            trimmedList = [];
 
-                      if (notFound) {
-                          trimmedList.push(value);
-                      }
-                  });
-                  results = trimmedList;
-              }
-          }
+        if (!setting) {
+            return results;
+        }
 
-          return results;
-      }
+        if (typeof setting === 'function') {
+            return setting(currentTokens, results);
+        }
+
+        if (currentTokens.length) {
+            $.each(results, function (index, value) {
+                var notFound = true;
+                $.each(currentTokens, function (cIndex, cValue) {
+                    if (value[$(input).data("settings").propertyToSearch] == cValue[$(input).data("settings").propertyToSearch]) {
+                        notFound = false;
+                        return false;
+                    }
+                });
+
+                if (notFound) {
+                    trimmedList.push(value);
+                }
+            });
+            results = trimmedList;
+        }
+
+        return results;
+    }
 
       // Populate the results dropdown with some results
       function populateDropdown (query, results) {
