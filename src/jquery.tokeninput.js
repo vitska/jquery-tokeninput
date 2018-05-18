@@ -14,10 +14,12 @@
     queryParam: "q",
     searchDelay: 300,
     minChars: 1,
+    idProperty: "name", // By default name (backward compatibility)
     propertyToSearch: "name",
     jsonContainer: null,
     contentType: "json",
-    excludeCurrent: false, // Might be a funcion (currentTokens, results): filteredresults
+    excludeCurrent: false,  // Might be a function (currentTokens, results): filteredresults
+                            // added ability to apply custom logic in filtering current results
     excludeCurrentParameter: "x",
 
     // Prepopulation settings
@@ -846,37 +848,34 @@
 
       // exclude existing tokens from dropdown, so the list is clearer
       function excludeCurrent(results) {
-        // VGO: 2018-05-17 added ability to apply custom logic in filtering current results
-        var setting = $(input).data("settings").excludeCurrent,
+        var settings = $(input).data("settings"),
+            excludeValue = settings.excludeCurrent,
             currentTokens = $(input).data("tokenInputObject").getTokens(),
             trimmedList = [];
 
-        if (!setting) {
+        if (!excludeValue || !results) {
             return results;
         }
 
-        if (typeof setting === 'function') {
-            return setting(currentTokens, results);
+        if (typeof excludeValue === 'function') {
+            return excludeValue(currentTokens, results);
         }
 
-        if (currentTokens.length) {
-            $.each(results, function (index, value) {
-                var notFound = true;
-                $.each(currentTokens, function (cIndex, cValue) {
-                    if (value[$(input).data("settings").propertyToSearch] == cValue[$(input).data("settings").propertyToSearch]) {
-                        notFound = false;
-                        return false;
-                    }
-                });
-
-                if (notFound) {
-                    trimmedList.push(value);
-                }
-            });
-            results = trimmedList;
+        if (!currentTokens.length) {
+            return results;
         }
 
-        return results;
+        var lookupIds = {};
+        for(var i=0; i < currentTokens.length; i++){
+            lookupIds[currentTokens[i][settings.idProperty]] = 1;
+        }
+        for(var i=0; i < results.length; i++){
+            var value = results[i];
+            if(!lookupIds[value[settings.idProperty]]){
+                trimmedList.push(value);
+            }
+        }
+        return trimmedList;
     }
 
       // Populate the results dropdown with some results
